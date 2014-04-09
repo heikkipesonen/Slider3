@@ -1,0 +1,10 @@
+{
+  "name": "slider3",
+  "private": true,
+  "dependencies": {
+    "jquery": ">= 1.7 <= 2.1",
+    "handlebars": ">= 1.0.0 < 2.0.0",
+    "jquery-hammerjs": "~1.0.6"
+  },
+  "devDependencies": {}
+}
