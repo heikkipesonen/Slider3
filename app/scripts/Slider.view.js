@@ -23,7 +23,6 @@ View.prototype = {
 	getCenterOffset:function(){
 		var position = this._position,
 			centerOffset = this.getCenter();
-
 		return {left:position.left + centerOffset.left, top: position.top + centerOffset.top};
 	},
 	getCenter:function(){
@@ -31,20 +30,6 @@ View.prototype = {
 	},
 	addChild:function(child){
 		this._view.append(child._view);
-	},
-	centerOnView:function(parent, duration){
-		var parentCenter = parent.getCenterOffset();
-		this.setCenter(parentCenter, duration);
-	},
-	setCenter:function(position, duration){
-		var meCenter = this.getCenter();
-		if (position.left === undefined) position.left = 0;
-		if (position.top === undefined) position.top = 0;
-
-		var diffX = position.left - meCenter.left,
-			diffY = position.top - meCenter.top;
-
-		this.setPosition({left:diffX,top:diffY}, duration);
 	},
 	scale:function(size){
 		this._view.css({
