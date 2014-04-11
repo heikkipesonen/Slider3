@@ -4,7 +4,8 @@ function Slider(container, options){
 		animationDuration:400,
 		tolerance: 20,
 		tension: 100,
-		stiffness: 0.3
+		stiffness: 0.3,
+		locked : false
 	}
 
 	this.slides = [];
@@ -30,7 +31,7 @@ Slider.prototype.init = function(_class, options){
 	this.extend(this.options, options);
 	
 	this._view = $('<div class="'+_class+'"></div>');
-	this._container = new View('slider-container');	
+	this._container = new View('slider-container');
 	this._container.css({'overflow':'hidden'});
 	this._container.addChild(this);
 	
@@ -53,7 +54,7 @@ Slider.prototype.init = function(_class, options){
 		me['_'+evt.type](evt);
 	});
 
-
+/*
 	this._view.hammer().on('tap','[data-link]',function(evt){
 		evt.stopPropagation();
 		var id = $(this).attr('data-link');
@@ -61,22 +62,19 @@ Slider.prototype.init = function(_class, options){
 		var slide = me.getSlide(id);
 		if (slide) this.renderSlides(slide);
 	});
+*/
 }
 
 Slider.prototype.load = function(data){
-	for (var i in data.slides){
-		this.addSlide(data.slides[i])
-	}
+	var me = this;
+	$.each(data.slides,function(){
+		me.addSlide(this);
+	});
 
-	for (var i in this.slides){
-		if (this.slides[i].next !== false && !(this.slides[i].next instanceof Slide) ){
-			this.slides[i].next = this.getSlide(this.slides[i].next);
-		}
-
-		if (this.slides[i].prev !== false && !(this.slides[i].prev instanceof Slide)){
-			this.slides[i].prev = this.getSlide(this.slides[i].prev);
-		}
-	}
+	$.each(this.slides, function(){
+		if (this.next !== false && !(this.next instanceof Slide) ) this.next = me.getSlide(this.next);
+		if (this.prev !== false && !(this.prev instanceof Slide) ) this.prev = me.getSlide(this.prev);
+	});
 
 	this.renderSlides();
 }
@@ -148,24 +146,6 @@ Slider.prototype.hasPrev = function(){
 	return this.slide.prev !== false;
 }
 
-Slider.prototype.center = function(index, evt){
-	if (evt){
-		index = 1;
-		if (this.options.direction === 'horizontal'){
-			if (evt.gesture.deltaX > this.options.tension) index = 0;
-			if (evt.gesture.deltaX < -this.options.tension) index = 2;
-		} else {
-			if (evt.gesture.deltaY > this.options.tension) index = 2;
-			if (evt.gesture.deltaY < -this.options.tension) index = 0;
-		}
-	}
-	if (index === undefined || index === null || index === false ) index = 1;
-	if (!this.hasPrev() && index === 0) index = 1;
-	if (!this.hasNext() && index === 2) index = 1;
-	if (index > this._slideContainers.length-1) index = this._slideContainers.length-1;
-	this.centerOnView(this._slideContainers[index], this.options.animationDuration || 300);
-}
-
 
 Slider.prototype._onTransitionEnd = function(){
 	var index = this._slideContainers.indexOf(this._centerContainer);
@@ -186,6 +166,36 @@ Slider.prototype._onTransitionEnd = function(){
 	}
 }
 
+Slider.prototype.arrageContainers = function(){
+	var offset = 0;
+	for (var i in this._slideContainers){
+		if (this.options.direction === 'horizontal'){
+			this._slideContainers[i].setPosition({left:offset, top:0});
+			offset += this._slideContainers[i].getWidth();
+		} else {
+			this._slideContainers[i].setPosition({left:0, top:offset});
+			offset += this._slideContainers[i].getHeight();			
+		}
+	}	
+}
+
+Slider.prototype.center = function(index, evt){
+	if (evt){
+		index = 1;
+		if (this.options.direction === 'horizontal'){
+			if (evt.gesture.deltaX > this.options.tension) index = 0;
+			if (evt.gesture.deltaX < -this.options.tension) index = 2;
+		} else {
+			if (evt.gesture.deltaY > this.options.tension) index = 2;
+			if (evt.gesture.deltaY < -this.options.tension) index = 0;
+		}
+	}
+	if (index === undefined || index === null || index === false ) index = 1;
+	if (!this.hasPrev() && index === 0) index = 1;
+	if (!this.hasNext() && index === 2) index = 1;
+	if (index > this._slideContainers.length-1) index = this._slideContainers.length-1;
+	this.centerOnView(this._slideContainers[index], this.options.animationDuration || 300);
+}
 
 Slider.prototype.centerOnView = function(view, duration){
 	var viewCenter = view.getCenterOffset();
@@ -205,18 +215,6 @@ Slider.prototype.setCenter = function(position, duration){
 	this.setPosition({left:diffX,top:diffY}, duration);	
 }
 
-Slider.prototype.arrageContainers = function(){
-	var offset = 0;
-	for (var i in this._slideContainers){
-		if (this.options.direction === 'horizontal'){
-			this._slideContainers[i].setPosition({left:offset, top:0});
-			offset += this._slideContainers[i].getWidth();
-		} else {
-			this._slideContainers[i].setPosition({left:0, top:offset});
-			offset += this._slideContainers[i].getHeight();			
-		}
-	}	
-}
 
 Slider.prototype.scale = function(){
 	this._container.fitView();
