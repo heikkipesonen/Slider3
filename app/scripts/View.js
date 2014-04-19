@@ -193,7 +193,6 @@ Events.prototype.fire = function(type, data, context) {
     }
    
     handlers = listeners[type];
-
     if (!handlers){
         return;
     }
@@ -203,7 +202,7 @@ Events.prototype.fire = function(type, data, context) {
 
         if (typeof(context)!=="undefined"){
             if (handler.method.call(
-                context, this, type, data
+                context, data, this, type
             )===false) {
                 return false;
             }

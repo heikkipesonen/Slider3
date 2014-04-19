@@ -44,5 +44,9 @@ var data = {
 
 s.load(data);
 s.on('transitionEnd',function(slide){
-	console.log(this, slide)
+//	console.log(slide.id)
+})
+
+s.on('changeStart',function(slide){
+	console.log('asdfasdfasfd',slide)
 })

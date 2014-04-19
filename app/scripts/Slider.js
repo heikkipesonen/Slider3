@@ -183,7 +183,7 @@ Slider.prototype._onTransitionEnd = function(){
 		this.arrageContainers();
 		this.centerOnView(this._slideContainers[1],false);
 	}
-	this.fire('transitionEnd', this, this.slide);
+	this.fire('transitionEnd', this.slide, this);
 }
 
 Slider.prototype.arrageContainers = function(){
@@ -214,6 +214,9 @@ Slider.prototype.center = function(index, evt){
 	if (!this.hasPrev() && index === 0) index = 1;
 	if (!this.hasNext() && index === 2) index = 1;
 	if (index > this._slideContainers.length-1) index = this._slideContainers.length-1;
+
+	if (index === 2) this.fire('changeStart', this.slide.next, this);
+	if (index === 0) this.fire('changeStart', this.slide.prev, this);
 	this.centerOnView(this._slideContainers[index], this.options.animationDuration || 300);
 }
 
