@@ -3,6 +3,7 @@ function View(_class, options){
 }
 
 View.prototype = new Events();
+View.prototype.constructor = View;
 
 View.prototype.init = function(_class, options){
 	this.options = {
@@ -143,7 +144,8 @@ View.prototype.getContainer = function(){
 
 View.prototype.fitView = function(view){
 	if (! view ) view = this.getContainer();
-	this.scale({width: view.innerWidth(), height: view.innerHeight()});		
+	this.scale({width: view.innerWidth(), height: view.innerHeight()});
+	this.fire('resize', this);
 }
 
 View.prototype.render = function(view){
@@ -151,6 +153,7 @@ View.prototype.render = function(view){
 	if (view){
 		if ($.contains(view, this._view)) return;
 		view.append(this._view);
+		this.fire('render', this);
 	}
 }
 
@@ -167,45 +170,44 @@ function Events(){
 
 }
 
-Events.prototype = {
-	on: function(type, method, scope, context) { 
-        var listeners, handlers, scope;
-        if (!(listeners = this.__listeners)) {
-            listeners = this.__listeners = {};
-        }
-        if (!(handlers = listeners[type])){
-            handlers = listeners[type] = [];
-        }
-        scope = (scope ? scope : window);
-        handlers.push({
-            method: method,
-            scope: scope,
-            context: (context ? context : scope)
-        });
-    },
-    fire: function(type, data, context) {
-        var listeners, handlers, i, n, handler, scope;
-        if (!(listeners = this.__listeners)) {
-            return;
-        }
-       
-        handlers = listeners[type];
+Events.prototype.on = function(type, method, scope, context) { 
+    var listeners, handlers, scope;
+    if (!(listeners = this.__listeners)) {
+        listeners = this.__listeners = {};
+    }
+    if (!(handlers = listeners[type])){
+        handlers = listeners[type] = [];
+    }
+    scope = (scope ? scope : window);
+    handlers.push({
+        method: method,
+        scope: scope,
+        context: (context ? context : scope)
+    });
+}
 
-        if (!handlers){
-            return;
-        }
+Events.prototype.fire = function(type, data, context) {
+    var listeners, handlers, i, n, handler, scope;
+    if (!(listeners = this.__listeners)) {
+        return;
+    }
+   
+    handlers = listeners[type];
 
-        for (i = 0, n = handlers.length; i < n; i++){
-            handler = handlers[i];
+    if (!handlers){
+        return;
+    }
 
-            if (typeof(context)!=="undefined"){
-                if (handler.method.call(
-                    context, this, type, data
-                )===false) {
-                    return false;
-                }
+    for (i = 0, n = handlers.length; i < n; i++){
+        handler = handlers[i];
+
+        if (typeof(context)!=="undefined"){
+            if (handler.method.call(
+                context, this, type, data
+            )===false) {
+                return false;
             }
         }
-        return true;
-    }	
+    }
+    return true;
 }

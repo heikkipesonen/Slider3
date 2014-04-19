@@ -2,11 +2,18 @@ var s = new Slider('#wrapper');
 
 
 var data = {
+	templates:[
+		{	
+			name:'col1',
+			html:'<div class="col-1">{{#each content}}{{{this}}}{{/each}}</div>'
+		}
+	],
 	slides:[
 		{
 			id:1,
 			name:'pena',
-			content:['<h3>PSURDO</h3>'],
+			content:['<h3 data-link="4">aesf</h3>','asdfasdfasdfsadfasdf','asdfafsdsfad'],
+			template:'col1',
 			next:2,
 			prev:false
 		},
@@ -27,8 +34,8 @@ var data = {
 		{
 			id:4,
 			name:'pena',
-			content:['<h3>PSURDO</h3>'],
-			next:false,
+			content:['<h3>PSURDO PENA</h3>'],
+			next:1,
 			prev:3
 		},
 
@@ -36,3 +43,6 @@ var data = {
 }
 
 s.load(data);
+s.on('transitionEnd',function(slide){
+	console.log(this, slide)
+})

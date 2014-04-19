@@ -10,10 +10,17 @@ function Slide(data, options){
 	this.load(data);
 }
 
+Slide.prototype.setTemplate = function(template){
+	if (typeof (template) === 'string'){
+		this._template = Handlebars.compile(template);
+	} else if (typeof(template) === 'function'){
+		this._template = template;
+	}
+}
+
 Slide.prototype.load = function(data){
-	if (!data.template) data.template = 'page';
-	
-	this._template = Handlebars.compile( $('[data-template-name="'+data.template+'"]').html() );
+	if (!data.template) data.template = '<div class="page">{{#each content}}{{{this}}}{{/each}}</div>';
+	this.setTemplate(data.template);
 	this.id = data.id;
 	this.content = data.content;
 	this.next= data.next;
