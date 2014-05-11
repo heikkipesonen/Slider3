@@ -1,13 +1,13 @@
-function Slidecontainer(_class, options){
+function SliderSlidecontainer(_class, options){
 	this.init(_class, options);
 
 	this.slide = false;
 	this.css({'position':'absolute','top':'0px','left':'0px'});
-}
+};
 
-Slidecontainer.prototype = new View();
+SliderSlidecontainer.prototype = new SliderView();
 
-Slidecontainer.prototype.renderSlide = function(slide){
+SliderSlidecontainer.prototype.renderSlide = function(slide){
 	if (this.slide === slide) return;	
 	this.slide = slide;
 	if (slide){
@@ -15,4 +15,4 @@ Slidecontainer.prototype.renderSlide = function(slide){
 	} else {
 		this._view.empty();
 	}
-}
+};

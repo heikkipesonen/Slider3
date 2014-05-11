@@ -48,5 +48,5 @@ s.on('transitionEnd',function(slide){
 })
 
 s.on('changeStart',function(slide){
-	console.log('asdfasdfasfd',slide)
+	
 })

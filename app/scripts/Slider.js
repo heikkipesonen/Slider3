@@ -1,4 +1,4 @@
-function Slider(container, options){	
+function Slider(container, options){
 	this.options = {
 		direction:'horizontal',
 		animationDuration:400,
@@ -14,9 +14,9 @@ function Slider(container, options){
 	this.extend( this.options, options);
 	this.init('Slider',this.options);
 	this.render(container);
-}
+};
 
-Slider.prototype = new View();
+Slider.prototype = new SliderView();
 Slider.prototype.constructor = Slider;
 
 Slider.prototype.init = function(_class, options){
@@ -31,22 +31,22 @@ Slider.prototype.init = function(_class, options){
 	}
 
 	this.extend(this.options, options);
-	
+
 	this._view = $('<div class="'+_class+'"></div>');
-	this._container = new View('slider-container');
+	this._container = new SliderView('slider-container');
 	this._container.css({'overflow':'hidden'});
 	this._container.addChild(this);
-	
-	this._slideContainers = [new Slidecontainer('Slidecontainer pg-1'),
-							 new Slidecontainer('Slidecontainer pg-2'),
-							 new Slidecontainer('Slidecontainer pg-3')];
+
+	this._slideContainers = [new SliderSlidecontainer('Slidecontainer'),
+							 new SliderSlidecontainer('Slidecontainer'),
+							 new SliderSlidecontainer('Slidecontainer')];
 
 	$.each(this._slideContainers,function(){
 		this.render(me._view);
 	});
-	
+
 	this._centerContainer = false;
-	this.setPosition(this._position);
+	this.setPosition(this._position,0);
 
 	this._view.hammer().on('dragstart dragend drag release',function(evt){
 		evt.stopPropagation();
@@ -69,15 +69,15 @@ Slider.prototype.init = function(_class, options){
 		var slide = me.getSlide(id);
 		if (slide) me.show(slide);
 	});
-}
+};
 
 Slider.prototype.getTemplate = function(name){
 	return this.templates[name];
-}
+};
 
 Slider.prototype.addTemplate = function(data){
 	this.templates[data.name] = Handlebars.compile(data.html);
-}
+};
 
 Slider.prototype.load = function(data){
 	var me = this;
@@ -91,12 +91,12 @@ Slider.prototype.load = function(data){
 	});
 
 	$.each(this.slides, function(){
-		if (this.next !== false && !(this.next instanceof Slide) ) this.next = me.getSlide(this.next);
-		if (this.prev !== false && !(this.prev instanceof Slide) ) this.prev = me.getSlide(this.prev);		
+		if (this.next !== false && !(this.next instanceof SliderSlide) ) this.next = me.getSlide(this.next);
+		if (this.prev !== false && !(this.prev instanceof SliderSlide) ) this.prev = me.getSlide(this.prev);
 	});
 
-	this.renderSlides();
-}
+	this.renderSlides(this.slide);
+};
 
 Slider.prototype.getSlide = function(id){
 	for (var i in this.slides){
@@ -105,33 +105,33 @@ Slider.prototype.getSlide = function(id){
 		}
 	}
 	return false;
-}
+};
 
 Slider.prototype.addSlide = function(data){
-	var slide = new Slide(data, this);
+	var slide = new SliderSlide(data, this);
 	this.slides.push( slide );
 	if (!this.slide) this.slide = slide;
 	return slide;
-}
+};
 
 Slider.prototype._dragstart = function(evt){
 	if (this._animating || this.options.locked) return;
 	this.__lastEvent = evt;
-}
+};
 
 Slider.prototype._dragend = function(evt){
-	if (this._animating || this.options.locked) return;
+	//if (this._animating || this.options.locked) return;
 	this.__lastEvent = false;
-}
+};
 
 Slider.prototype._drag = function(evt){
 	if (!this.__lastEvent || this._animating || this.options.locked) return;
-	
+
 	if (this.options.direction === 'horizontal'){
 		if (Math.abs(evt.gesture.distance) > this.options.tolerance){
 			var dx = evt.gesture.deltaX - this.__lastEvent.gesture.deltaX;
-			
-			if (evt.gesture.deltaX < 0 && !this.hasNext()) dx = dx*this.options.stiffness;			
+
+			if (evt.gesture.deltaX < 0 && !this.hasNext()) dx = dx*this.options.stiffness;
 			if (evt.gesture.deltaX > 0 && !this.hasPrev()) dx = dx*this.options.stiffness;
 
 			this.move({top:0,left:dx},0);
@@ -139,44 +139,48 @@ Slider.prototype._drag = function(evt){
 	} else {
 		if (Math.abs(evt.gesture.deltaY) > this.options.tolerance){
 			var dy = evt.gesture.deltaY - this.__lastEvent.gesture.deltaY;
-			
-			if (evt.gesture.deltaY < 0 && !this.hasNext()) dy = dy*this.options.stiffness;			
-			if (evt.gesture.deltaY > 0 && !this.hasPrev()) dy = dy*this.options.stiffness;			
-			
-			this.move({top:dy,left:0},0);		
+
+			if (evt.gesture.deltaY < 0 && !this.hasNext()) dy = dy*this.options.stiffness;
+			if (evt.gesture.deltaY > 0 && !this.hasPrev()) dy = dy*this.options.stiffness;
+
+			this.move({top:dy,left:0},0);
 		}
 	}
 	this.__lastEvent = evt;
-}
+};
 
 Slider.prototype._release = function(evt){
 	if (this._animating || this.options.locked) return;
 	this.__lastEvent = false;
+	
 	this.center(null, evt);
-}
+};
 
 Slider.prototype.hasNext = function(){
 	if (!this.slide) return false;
 	return this.slide.next !== false;
-}
+};
 
 Slider.prototype.hasPrev = function(){
 	if (!this.slide) return false;
 	return this.slide.prev !== false;
-}
+};
 
 
 Slider.prototype._onTransitionEnd = function(){
 	var index = this._slideContainers.indexOf(this._centerContainer);
 
-	if (index !== 1 && index !== -1){		
+	if (index !== 1 && index !== -1){
 		if (index === 0 && this.hasPrev()){
-			this._slideContainers.unshift(this._slideContainers.pop());
-			this.slide = this.slide.prev;
+			
+			this.slide = this._slideContainers[0].slide;	
+			this._slideContainers.unshift(this._slideContainers.pop());			
 			this.renderSlides();
+
 		} else if (index ===2 && this.hasNext()){
+		
+			this.slide = this._slideContainers[2].slide;
 			this._slideContainers.push(this._slideContainers.shift());
-			this.slide = this.slide.next;
 			this.renderSlides();
 		}
 
@@ -184,7 +188,7 @@ Slider.prototype._onTransitionEnd = function(){
 		this.centerOnView(this._slideContainers[1],false);
 	}
 	this.fire('transitionEnd', this.slide, this);
-}
+};
 
 Slider.prototype.arrageContainers = function(){
 	var offset = 0;
@@ -194,12 +198,12 @@ Slider.prototype.arrageContainers = function(){
 			offset += this._slideContainers[i].getWidth();
 		} else {
 			this._slideContainers[i].setPosition({left:0, top:offset});
-			offset += this._slideContainers[i].getHeight();			
+			offset += this._slideContainers[i].getHeight();
 		}
-	}	
-}
+	}
+};
 
-Slider.prototype.center = function(index, evt){
+Slider.prototype.center = function(index, evt, animate){
 	if (evt){
 		index = 1;
 		if (this.options.direction === 'horizontal'){
@@ -217,16 +221,13 @@ Slider.prototype.center = function(index, evt){
 
 	if (index === 2) this.fire('changeStart', this.slide.next, this);
 	if (index === 0) this.fire('changeStart', this.slide.prev, this);
-	this.centerOnView(this._slideContainers[index], this.options.animationDuration || 300);
-}
+	
+	this.centerOnView(this._slideContainers[index], animate === false ? 0 : this.options.animationDuration);
+};
 
 Slider.prototype.centerOnView = function(view, duration){
-	var viewCenter = view.getCenterOffset();
+	var position = view.getCenterOffset();
 	this._centerContainer = view;
-	this.setCenter(viewCenter, duration);
-}
-
-Slider.prototype.setCenter = function(position, duration){
 	meCenter = this._container.getCenter();
 
 	if (position.left === undefined) position.left = 0;
@@ -235,8 +236,8 @@ Slider.prototype.setCenter = function(position, duration){
 	var diffX = meCenter.left - position.left,
 		diffY = meCenter.top - position.top;
 
-	this.setPosition({left:diffX,top:diffY}, duration);	
-}
+	this.setPosition({left:diffX,top:diffY}, duration);
+};
 
 
 Slider.prototype.scale = function(){
@@ -252,62 +253,86 @@ Slider.prototype.scale = function(){
 
 	this._view.css({width: w, height: h });
 	this.arrageContainers();
-	this.center(1,0);
-}
+	this.center(1,0,false);
+};
 
 Slider.prototype.reset = function(){
 	this.scale();
 	this.arrageContainers();
 	this.centerOnView(this._slideContainers[1]);
-}
+};
 
 Slider.prototype.render = function(view){
 	if (typeof view === 'string') view = $(view);
 	if (view) this._container.render(view);
 
-	if (this.slide){	
+	if (this.slide){
 		this.renderSlides();
 	}
 
 	this.reset();
-}
+};
 
-Slider.prototype.prev = function(){
+Slider.prototype.prev = function(animate){
 	if (this._animating) return;
 	if (!this.slide.prev) return;
-	this.centerOnView(this._slideContainers[0], this.options.animationDuration || 300);
-	this.arrageContainers();
-}
+	this.centerOnView(this._slideContainers[0], animate === false ?  0 : this.options.animationDuration || 300);
+	//this.arrageContainers();
+};
 
-Slider.prototype.next = function(){
+Slider.prototype.next = function(animate){
 	if (!this.slide.next) return;
 	if (this._animating) return;
-	this.centerOnView(this._slideContainers[2], this.options.animationDuration || 300);
-	this.arrageContainers();
+	this.centerOnView(this._slideContainers[2], animate === false ?  0 : this.options.animationDuration || 300);
+	//this.arrageContainers();
+};
+
+Slider.prototype.getSlideOffset = function(slide){
+	var current = this.getCurrentSlide();
+	return current.getOffset(slide);
 }
 
-Slider.prototype.show = function(slide){
-	if (!(slide instanceof Slide)) slide = this.getSlide(slide);
+Slider.prototype.show = function(slide, animate){
+	if (!(slide instanceof SliderSlide)) slide = this.getSlide(slide);
 	if (!slide) return;
-	
+
+
 	if (slide === this.slide.next){
-		this.next();
+		this.next(animate);
 		return;
 	}
 
 	if (slide === this.slide.prev){
-		this.prev();
+		this.prev(animate);
 		return;
 	}
 
-	if (slide instanceof Slide){
-		this.renderSlides(slide);
+	if (slide instanceof SliderSlide){
+		var offset = this.getSlideOffset(slide);
+
+		if (offset > 0){
+			this._slideContainers[2].renderSlide(slide);
+			this.centerOnView(this._slideContainers[2], animate === false ?  0 : this.options.animationDuration || 300);
+			
+			
+		} else if (offset < 0){
+			this._slideContainers[0].renderSlide(slide);
+			this.centerOnView(this._slideContainers[0], animate === false ?  0 : this.options.animationDuration || 300);
+			
+			
+		} else {
+			this.renderSlides(slide);
+		}
 	}
-}
+};
+
+Slider.prototype.getCurrentSlide = function(){
+	return this._slideContainers[1].slide;
+};
 
 Slider.prototype.renderSlides = function(slide){
 	if (slide) this.slide = slide;
 	this._slideContainers[0].renderSlide(this.slide.prev);
 	this._slideContainers[1].renderSlide(this.slide);
-	this._slideContainers[2].renderSlide(this.slide.next);	
-}
+	this._slideContainers[2].renderSlide(this.slide.next);
+};
