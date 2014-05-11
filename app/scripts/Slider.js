@@ -172,7 +172,7 @@ Slider.prototype._onTransitionEnd = function(){
 
 	if (index !== 1 && index !== -1){
 		if (index === 0 && this.hasPrev()){
-			
+
 			this.slide = this._slideContainers[0].slide;	
 			this._slideContainers.unshift(this._slideContainers.pop());			
 			this.renderSlides();
@@ -184,13 +184,13 @@ Slider.prototype._onTransitionEnd = function(){
 			this.renderSlides();
 		}
 
-		this.arrageContainers();
+		this.arrangeContainers();
 		this.centerOnView(this._slideContainers[1],false);
 	}
 	this.fire('transitionEnd', this.slide, this);
 };
 
-Slider.prototype.arrageContainers = function(){
+Slider.prototype.arrangeContainers = function(){
 	var offset = 0;
 	for (var i in this._slideContainers){
 		if (this.options.direction === 'horizontal'){
@@ -252,13 +252,13 @@ Slider.prototype.scale = function(){
 	});
 
 	this._view.css({width: w, height: h });
-	this.arrageContainers();
+	this.arrangeContainers();
 	this.center(1,0,false);
 };
 
 Slider.prototype.reset = function(){
 	this.scale();
-	this.arrageContainers();
+	this.arrangeContainers();
 	this.centerOnView(this._slideContainers[1]);
 };
 
@@ -277,14 +277,14 @@ Slider.prototype.prev = function(animate){
 	if (this._animating) return;
 	if (!this.slide.prev) return;
 	this.centerOnView(this._slideContainers[0], animate === false ?  0 : this.options.animationDuration || 300);
-	//this.arrageContainers();
+	//this.arrangeContainers();
 };
 
 Slider.prototype.next = function(animate){
 	if (!this.slide.next) return;
 	if (this._animating) return;
 	this.centerOnView(this._slideContainers[2], animate === false ?  0 : this.options.animationDuration || 300);
-	//this.arrageContainers();
+	//this.arrangeContainers();
 };
 
 Slider.prototype.getSlideOffset = function(slide){
