@@ -1,7 +1,7 @@
 function Slider(container, options){
 	this.options = {
 		direction:'horizontal',
-		animationDuration:400,
+		animationDuration:500,
 		tolerance: 20,
 		tension: 100,
 		stiffness: 0.3,
@@ -11,7 +11,7 @@ function Slider(container, options){
 	this.templates = {};
 	this.slides = [];
 	this.slide = false;
-	this.extend( this.options, options);
+	$.extend( this.options, options);
 	this.init('Slider',this.options);
 	this.render(container);
 };
@@ -30,16 +30,16 @@ Slider.prototype.init = function(_class, options){
 		top:0
 	}
 
-	this.extend(this.options, options);
+	$.extend(this.options, options);
 
 	this._view = $('<div class="'+_class+'"></div>');
 	this._container = new SliderView('slider-container');
 	this._container.css({'overflow':'hidden'});
 	this._container.addChild(this);
 
-	this._slideContainers = [new SliderSlidecontainer('Slidecontainer'),
-							 new SliderSlidecontainer('Slidecontainer'),
-							 new SliderSlidecontainer('Slidecontainer')];
+	this._slideContainers = [new SlideContainer('Slidecontainer'),
+							 new SlideContainer('Slidecontainer'),
+							 new SlideContainer('Slidecontainer')];
 
 	$.each(this._slideContainers,function(){
 		this.render(me._view);
@@ -91,8 +91,8 @@ Slider.prototype.load = function(data){
 	});
 
 	$.each(this.slides, function(){
-		if (this.next !== false && !(this.next instanceof SliderSlide) ) this.next = me.getSlide(this.next);
-		if (this.prev !== false && !(this.prev instanceof SliderSlide) ) this.prev = me.getSlide(this.prev);
+		if (this.next !== false && !(this.next instanceof Slide) ) this.next = me.getSlide(this.next);
+		if (this.prev !== false && !(this.prev instanceof Slide) ) this.prev = me.getSlide(this.prev);
 	});
 
 	this.renderSlides(this.slide);
@@ -108,7 +108,7 @@ Slider.prototype.getSlide = function(id){
 };
 
 Slider.prototype.addSlide = function(data){
-	var slide = new SliderSlide(data, this);
+	var slide = new Slide(data, this);
 	this.slides.push( slide );
 	if (!this.slide) this.slide = slide;
 	return slide;
@@ -187,6 +187,7 @@ Slider.prototype._onTransitionEnd = function(){
 		this.arrangeContainers();
 		this.centerOnView(this._slideContainers[1],false);
 	}
+
 	this.fire('transitionEnd', this.slide, this);
 };
 
@@ -265,12 +266,16 @@ Slider.prototype.reset = function(){
 Slider.prototype.render = function(view){
 	if (typeof view === 'string') view = $(view);
 	if (view) this._container.render(view);
-
 	if (this.slide){
 		this.renderSlides();
 	}
 
 	this.reset();
+};
+
+Slider.prototype.getSlideOffset = function(slide){
+	var current = this.getCurrentSlide();
+	return current.getOffset(slide);
 };
 
 Slider.prototype.prev = function(animate){
@@ -287,13 +292,8 @@ Slider.prototype.next = function(animate){
 	//this.arrangeContainers();
 };
 
-Slider.prototype.getSlideOffset = function(slide){
-	var current = this.getCurrentSlide();
-	return current.getOffset(slide);
-}
-
 Slider.prototype.show = function(slide, animate){
-	if (!(slide instanceof SliderSlide)) slide = this.getSlide(slide);
+	if (!(slide instanceof Slide)) slide = this.getSlide(slide);
 	if (!slide) return;
 
 
@@ -307,7 +307,7 @@ Slider.prototype.show = function(slide, animate){
 		return;
 	}
 
-	if (slide instanceof SliderSlide){
+	if (slide instanceof Slide){
 		var offset = this.getSlideOffset(slide);
 
 		if (offset > 0){
@@ -326,13 +326,22 @@ Slider.prototype.show = function(slide, animate){
 	}
 };
 
+Slider.prototype.getSlideView = function(index){
+	return this._slideContainers[index].getView();
+}
+
 Slider.prototype.getCurrentSlide = function(){
 	return this._slideContainers[1].slide;
 };
 
 Slider.prototype.renderSlides = function(slide){
 	if (slide) this.slide = slide;
-	this._slideContainers[0].renderSlide(this.slide.prev);
-	this._slideContainers[1].renderSlide(this.slide);
-	this._slideContainers[2].renderSlide(this.slide.next);
+	var r = [];
+	r.push( this._slideContainers[0].renderSlide(this.slide.prev) );
+	r.push( this._slideContainers[1].renderSlide(this.slide) );
+	r.push( this._slideContainers[2].renderSlide(this.slide.next) );
+
+	if (r.indexOf(true) > -1){
+		this.fire('change',this.slide, this);
+	}	
 };

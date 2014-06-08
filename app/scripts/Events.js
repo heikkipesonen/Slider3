@@ -1,19 +1,28 @@
 function SliderEvents(){};
 
-SliderEvents.prototype.on = function(type, method, scope, context) { 
-    var listeners, handlers, scope;
-    if (!(listeners = this.__listeners)) {
-        listeners = this.__listeners = {};
+SliderEvents.prototype.on = function(type, method, scope, context) {
+
+    if (typeof(type) === 'object'){
+        for (var i in type){
+            this.on(i, type[i],scope ? scope : this, context ? context : this);
+        }
+    } else {
+        var listeners, handlers, scope;
+
+        if (!(listeners = this.__listeners)) {
+            listeners = this.__listeners = {};
+        }
+        if (!(handlers = listeners[type])){
+            handlers = listeners[type] = [];
+        }
+
+        scope = (scope ? scope : window);
+        handlers.push({
+            method: method,
+            scope: scope,
+            context: (context ? context : scope)
+        });
     }
-    if (!(handlers = listeners[type])){
-        handlers = listeners[type] = [];
-    }
-    scope = (scope ? scope : window);
-    handlers.push({
-        method: method,
-        scope: scope,
-        context: (context ? context : scope)
-    });
 };
 
 SliderEvents.prototype.fire = function(type, data, context) {

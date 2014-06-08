@@ -1,4 +1,4 @@
-function SliderSlide(data, options){
+function Slide(data, options){
 
 	this._template = false;
 	this.content = [];
@@ -10,7 +10,7 @@ function SliderSlide(data, options){
 	this.load(data);
 };
 
-SliderSlide.prototype.getOffset = function(slide, visited){
+Slide.prototype.getOffset = function(slide, visited){
 	if (!visited) visited = [];
 	var offset = 0;
 
@@ -37,7 +37,7 @@ SliderSlide.prototype.getOffset = function(slide, visited){
 	return offset;
 }
 
-SliderSlide.prototype.setTemplate = function(template){
+Slide.prototype.setTemplate = function(template){
 	if (typeof (template) === 'string'){
 		this._template = Handlebars.compile(template);
 	} else if (typeof(template) === 'function'){
@@ -45,7 +45,7 @@ SliderSlide.prototype.setTemplate = function(template){
 	}
 };
 
-SliderSlide.prototype.load = function(data){
+Slide.prototype.load = function(data){
 	if (!data.template){
 		this.setTemplate('{{#each content}}{{{this}}}{{/each}}');
 	} else {
@@ -58,15 +58,15 @@ SliderSlide.prototype.load = function(data){
 	this.prev = data.prev;
 };
 
-SliderSlide.prototype.prepend = function(content){
+Slide.prototype.prepend = function(content){
 	this.content.unshift(content);
 };
 
-SliderSlide.prototype.append = function(content){
+Slide.prototype.append = function(content){
 	this.content.push(content);
 };
 
-SliderSlide.prototype.render = function(view){
+Slide.prototype.render = function(view){
 	if (view) this._view = view;
 	if (this._view){
 		this._view.html(this._template(this));

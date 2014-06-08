@@ -9,7 +9,7 @@ SliderView.prototype.init = function(_class, options){
 	this.options = {
 		transforms:true
 	}
-	this.extend(this.options, options);
+	$.extend(this.options, options);
 	this._view = $('<div class="'+_class+'"></div>');
 
 	this._position = {
@@ -48,6 +48,7 @@ SliderView.prototype.scale = function(size){
 SliderView.prototype.applyPrefix = function(prop, value){
 	var prefixes = 'webkit,moz,o,ms'.split(',');
 
+	this._view.css(prop,value);
 	for (var i in prefixes){
 		this._view.css('-'+prefixes[i]+'-'+prop,value);
 	}
@@ -87,7 +88,8 @@ SliderView.prototype.setPosition = function(position, duration){
 	if (this.options.transforms){			
 		
 		this._animating = true;			
-		this.applyPrefix('transition-duration',duration+'ms');			
+		this.applyPrefix('transition-duration',duration+'ms');
+		this.applyPrefix('transition-timing-function',this.options.easing || 'cubic-bezier(.49,.17,.07,1)');
 
 		var me = this;
 		if (duration){		
@@ -161,13 +163,5 @@ SliderView.prototype.render = function(view){
 		if ($.contains(view, this._view)) return;
 		view.append(this._view);
 		this.fire('render', this);
-	}
-};
-
-SliderView.prototype.extend = function(obj, obj2, ignore){
-	for (var i in obj2){
-		if (i!==ignore){
-			obj[i] = obj2[i];
-		}
 	}
 };

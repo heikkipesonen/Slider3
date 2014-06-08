@@ -14,7 +14,7 @@ var data = {
 			name:'pena',
 			content:['<h3 data-link="4">aesf</h3>','asdfasdfasdfsadfasdf','asdfafsdsfad'],
 			template:'col1',
-			next:2,
+			next:false,
 			prev:false
 		},
 		{
@@ -42,11 +42,11 @@ var data = {
 	]
 }
 
-s.load(data);
-s.on('transitionEnd',function(slide){
-//	console.log(slide.id)
+s.on({
+	change:function(slide){
+		console.log( this.getSlideView(1) );
+		console.log(slide.id)
+	}
 })
 
-s.on('changeStart',function(slide){
-	
-})
+s.load(data);
