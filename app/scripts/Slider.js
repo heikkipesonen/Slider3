@@ -49,6 +49,7 @@ Slider.prototype.init = function(_class, options){
 	this.setPosition(this._position,0);
 
 	this._view.hammer().on('dragstart dragend drag release',function(evt){
+		if (me._animating) return;
 		evt.stopPropagation();
 		evt.preventDefault();
 		me['_'+evt.type](evt);
@@ -152,8 +153,19 @@ Slider.prototype._drag = function(evt){
 Slider.prototype._release = function(evt){
 	if (this._animating || this.options.locked) return;
 	this.__lastEvent = false;
+
+	if (evt){
+		index = 1;
+		if (this.options.direction === 'horizontal'){
+			if (evt.gesture.deltaX > this.options.tension) index = 0;
+			if (evt.gesture.deltaX < -this.options.tension) index = 2;
+		} else {
+			if (evt.gesture.deltaY > this.options.tension) index = 2;
+			if (evt.gesture.deltaY < -this.options.tension) index = 0;
+		}
 	
-	this.center(null, evt);
+		this.center(index);
+	}	
 };
 
 Slider.prototype.hasNext = function(){
@@ -166,18 +178,17 @@ Slider.prototype.hasPrev = function(){
 	return this.slide.prev !== false;
 };
 
-
 Slider.prototype._onTransitionEnd = function(){
 	var index = this._slideContainers.indexOf(this._centerContainer);
 
 	if (index !== 1 && index !== -1){
-		if (index === 0 && this.hasPrev()){
+		if (index === 0){
 
 			this.slide = this._slideContainers[0].slide;	
-			this._slideContainers.unshift(this._slideContainers.pop());			
+			this._slideContainers.unshift(this._slideContainers.pop());
 			this.renderSlides();
 
-		} else if (index ===2 && this.hasNext()){
+		} else if (index ===2){
 		
 			this.slide = this._slideContainers[2].slide;
 			this._slideContainers.push(this._slideContainers.shift());
@@ -204,43 +215,6 @@ Slider.prototype.arrangeContainers = function(){
 	}
 };
 
-Slider.prototype.center = function(index, evt, animate){
-	if (evt){
-		index = 1;
-		if (this.options.direction === 'horizontal'){
-			if (evt.gesture.deltaX > this.options.tension) index = 0;
-			if (evt.gesture.deltaX < -this.options.tension) index = 2;
-		} else {
-			if (evt.gesture.deltaY > this.options.tension) index = 2;
-			if (evt.gesture.deltaY < -this.options.tension) index = 0;
-		}
-	}
-	if (index === undefined || index === null || index === false ) index = 1;
-	if (!this.hasPrev() && index === 0) index = 1;
-	if (!this.hasNext() && index === 2) index = 1;
-	if (index > this._slideContainers.length-1) index = this._slideContainers.length-1;
-
-	if (index === 2) this.fire('changeStart', this.slide.next, this);
-	if (index === 0) this.fire('changeStart', this.slide.prev, this);
-	
-	this.centerOnView(this._slideContainers[index], animate === false ? 0 : this.options.animationDuration);
-};
-
-Slider.prototype.centerOnView = function(view, duration){
-	var position = view.getCenterOffset();
-	this._centerContainer = view;
-	meCenter = this._container.getCenter();
-
-	if (position.left === undefined) position.left = 0;
-	if (position.top === undefined) position.top = 0;
-
-	var diffX = meCenter.left - position.left,
-		diffY = meCenter.top - position.top;
-
-	this.setPosition({left:diffX,top:diffY}, duration);
-};
-
-
 Slider.prototype.scale = function(){
 	this._container.fitView();
 
@@ -254,7 +228,7 @@ Slider.prototype.scale = function(){
 
 	this._view.css({width: w, height: h });
 	this.arrangeContainers();
-	this.center(1,0,false);
+	this.center(1,false);
 };
 
 Slider.prototype.reset = function(){
@@ -278,17 +252,40 @@ Slider.prototype.getSlideOffset = function(slide){
 	return current.getOffset(slide);
 };
 
+Slider.prototype.center = function(index, animate){
+	if (index === undefined || index === null || index === false ) index = 1;
+	if (!this.hasPrev() && index === 0) index = 1;
+	if (!this.hasNext() && index === 2) index = 1;
+	if (index > this._slideContainers.length-1) index = this._slideContainers.length-1;
+	
+	this.centerOnView(this._slideContainers[index], animate);
+};
+Slider.prototype.centerOnView = function(view, duration){
+	var position = view.getCenterOffset();
+	this._centerContainer = view;
+	meCenter = this._container.getCenter();
+ 	duration = duration === false ?  0 : this.options.animationDuration || 300;
+
+	if (position.left === undefined) position.left = 0;
+	if (position.top === undefined) position.top = 0;
+
+	var diffX = meCenter.left - position.left,
+		diffY = meCenter.top - position.top;
+
+	this.setPosition({left:diffX,top:diffY}, duration);
+};
+
 Slider.prototype.prev = function(animate){
 	if (this._animating) return;
 	if (!this.slide.prev) return;
-	this.centerOnView(this._slideContainers[0], animate === false ?  0 : this.options.animationDuration || 300);
+	this.centerOnView(this._slideContainers[0], animate);
 	//this.arrangeContainers();
 };
 
 Slider.prototype.next = function(animate){
 	if (!this.slide.next) return;
 	if (this._animating) return;
-	this.centerOnView(this._slideContainers[2], animate === false ?  0 : this.options.animationDuration || 300);
+	this.centerOnView(this._slideContainers[2], animate);
 	//this.arrangeContainers();
 };
 
@@ -310,19 +307,19 @@ Slider.prototype.show = function(slide, animate){
 	if (slide instanceof Slide){
 		var offset = this.getSlideOffset(slide);
 
-		if (offset > 0){
-			this._slideContainers[2].renderSlide(slide);
-			this.centerOnView(this._slideContainers[2], animate === false ?  0 : this.options.animationDuration || 300);
-			
-			
-		} else if (offset < 0){
+		if (offset < 0){
 			this._slideContainers[0].renderSlide(slide);
 			this.centerOnView(this._slideContainers[0], animate === false ?  0 : this.options.animationDuration || 300);
 			
 			
-		} else {
-			this.renderSlides(slide);
+		} else {//if (offset > 0){
+			this._slideContainers[2].renderSlide(slide);
+			this.centerOnView(this._slideContainers[2], animate === false ?  0 : this.options.animationDuration || 300);
+			
+			
 		}
+			//this.renderSlides(slide);
+		//}
 	}
 };
 
@@ -341,7 +338,13 @@ Slider.prototype.renderSlides = function(slide){
 	r.push( this._slideContainers[1].renderSlide(this.slide) );
 	r.push( this._slideContainers[2].renderSlide(this.slide.next) );
 
+	for (var i in r){
+		if (r[i] === true){
+			this.fire('render',this._slideContainers[i].getView(), this._slideContainers[i].getView());
+		}
+	}
+
 	if (r.indexOf(true) > -1){
-		this.fire('change',this.slide, this);
+		this.fire('change',this.slide, this._slideContainers[1].getView());
 	}	
 };

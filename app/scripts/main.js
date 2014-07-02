@@ -12,9 +12,9 @@ var data = {
 		{
 			id:1,
 			name:'pena',
-			content:['<h3 data-link="4">aesf</h3>','asdfasdfasdfsadfasdf','asdfafsdsfad'],
+			content:['homosecs'],
 			template:'col1',
-			next:false,
+			next:2,
 			prev:false
 		},
 		{
@@ -43,9 +43,12 @@ var data = {
 }
 
 s.on({
+	render:function(slide){
+
+	},
 	change:function(slide){
-		console.log( this.getSlideView(1) );
-		console.log(slide.id)
+	console.log(slide)
+	console.log(this)
 	}
 })
 

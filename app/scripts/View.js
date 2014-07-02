@@ -2,7 +2,7 @@ function SliderView(_class, options){
 	if (_class) this.init(_class, options);
 };
 
-SliderView.prototype = new SliderEvents();
+SliderView.prototype = new Events();
 SliderView.prototype.constructor = SliderView;
 
 SliderView.prototype.init = function(_class, options){

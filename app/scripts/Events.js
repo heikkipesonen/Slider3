@@ -1,3 +1,4 @@
+/*
 function SliderEvents(){};
 
 SliderEvents.prototype.on = function(type, method, scope, context) {
@@ -49,3 +50,23 @@ SliderEvents.prototype.fire = function(type, data, context) {
     }
     return true;
 };
+*/
+function Events(){};
+
+Events.prototype = {
+    on:function(listeners){
+        if (!this._listeners) this._listeners = {};
+        for (var i in listeners){
+            if (!this._listeners[i]) this._listeners[i] = [];
+            this._listeners[i].push( listeners[i] );
+        }
+    },
+    fire:function(evt, data, ctx){
+        if (!this._listeners) this._listeners = {};
+        if (this._listeners[evt]){
+            for (var i in this._listeners[evt]){
+                this._listeners[evt][i].call(ctx || this, data)
+            }
+        }
+    },
+}
